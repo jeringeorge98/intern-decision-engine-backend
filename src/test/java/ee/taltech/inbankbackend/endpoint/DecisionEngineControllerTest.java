@@ -20,6 +20,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Objects;
+
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,9 +46,21 @@ public class DecisionEngineControllerTest {
 
     private ObjectMapper objectMapper;
 
+    private String debtorPersonalCode;
+    private String segment1PersonalCode;
+    private String segment2PersonalCode;
+    private String segment3PersonalCode;
+    private String noValidPersonalCode;
+
     @BeforeEach
     public void setup() {
+
         objectMapper = new ObjectMapper();
+        debtorPersonalCode = "37605030299";
+        segment1PersonalCode = "50307172740";
+        segment2PersonalCode = "38411266610";
+        segment3PersonalCode = "35006069515";
+        noValidPersonalCode = "37605031399";
     }
 
     /**
@@ -56,7 +70,7 @@ public class DecisionEngineControllerTest {
     public void givenValidRequest_whenRequestDecision_thenReturnsExpectedResponse()
             throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
             InvalidLoanAmountException {
-        Decision decision = new Decision(1000, 12, null);
+        Decision decision = new Decision(true,1000, 12, null);
         when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt())).thenReturn(decision);
 
         DecisionRequest request = new DecisionRequest("1234", 10L, 10);
@@ -72,10 +86,98 @@ public class DecisionEngineControllerTest {
                 .andReturn();
 
         DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert Objects.equals(response.getLoanApproval(), "APPROVED");
         assert response.getLoanAmount() == 1000;
         assert response.getLoanPeriod() == 12;
         assert response.getErrorMessage() == null;
     }
+
+    @Test
+    public void givenValidRequest_whenCreditScoreIsLow_thenReturnsExpectedResponse()
+            throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
+            InvalidLoanAmountException {
+        // Create a decision with approved=false and appropriate error message
+        Decision decision = new Decision(false, null, null, "Credit Score is too low");
+        when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt())).thenReturn(decision);
+
+        DecisionRequest request = new DecisionRequest(segment1PersonalCode, 8000L, 12);
+
+        MvcResult result = mockMvc.perform(post("/loan/decision")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.loanAmount").isEmpty())
+                .andExpect(jsonPath("$.loanPeriod").isEmpty())
+                .andExpect(jsonPath("$.loanApproval").value("REJECTED"))
+                .andExpect(jsonPath("$.errorMessage").value("Credit Score is too low"))
+                .andReturn();
+
+        DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert response.getLoanApproval().equals("REJECTED");
+        assert response.getLoanAmount() == null;
+        assert response.getLoanPeriod() == null;
+        assert response.getErrorMessage().equals("Credit Score is too low");
+    }
+
+    @Test
+    public void givenValidRequest_whenCreditScoreIsHigh_thenReturnsExpectedResponse()
+            throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
+            InvalidLoanAmountException {
+        // Create a decision with approved=true for high credit score
+        Decision decision = new Decision(true, 3000, 24, null);
+        when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt())).thenReturn(decision);
+
+        DecisionRequest request = new DecisionRequest(segment3PersonalCode, 3000L, 24);
+
+        MvcResult result = mockMvc.perform(post("/loan/decision")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.loanAmount").value(3000))
+                .andExpect(jsonPath("$.loanPeriod").value(24))
+                .andExpect(jsonPath("$.loanApproval").value("APPROVED"))
+                .andExpect(jsonPath("$.errorMessage").isEmpty())
+                .andReturn();
+
+        DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert response.getLoanApproval().equals("APPROVED");
+        assert response.getLoanAmount() == 3000;
+        assert response.getLoanPeriod() == 24;
+        assert response.getErrorMessage() == null;
+    }
+
+
+
+
+
+    @Test
+    public void givenValidRequest_whenDecisionIsNegative_thenReturnsExpectedResponse()
+            throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
+            InvalidLoanAmountException {
+        Decision decision = new Decision(false,0, 0, "User has debt");
+        when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt())).thenReturn(decision);
+
+        DecisionRequest request = new DecisionRequest("1234", 10L, 10);
+
+        MvcResult result = mockMvc.perform(post("/loan/decision")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.loanAmount").value(0))
+                .andExpect(jsonPath("$.loanPeriod").value(0))
+                .andExpect(jsonPath("$.errorMessage").isNotEmpty())
+                .andReturn();
+
+        DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert Objects.equals(response.getLoanApproval(), "REJECTED");
+        assert response.getLoanAmount() == 0;
+        assert response.getLoanPeriod() == 0;
+        assert response.getErrorMessage().equals("User has debt");
+    }
+
 
     /**
      * This test ensures that if an invalid personal code is provided, the controller returns

@@ -11,8 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class DecisionEngineTest {
@@ -24,6 +23,7 @@ class DecisionEngineTest {
     private String segment1PersonalCode;
     private String segment2PersonalCode;
     private String segment3PersonalCode;
+    private String noValidPersonalCode;
 
     @BeforeEach
     void setUp() {
@@ -31,28 +31,34 @@ class DecisionEngineTest {
         segment1PersonalCode = "50307172740";
         segment2PersonalCode = "38411266610";
         segment3PersonalCode = "35006069515";
+        noValidPersonalCode = "37605031399";
     }
 
     @Test
-    void testDebtorPersonalCode() {
-        assertThrows(NoValidLoanException.class,
-                () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 4000L, 12));
+    void testDebtorPersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
+            InvalidPersonalCodeException, InvalidLoanAmountException {
+//        assertThrows(NoValidLoanException.class,
+//                () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 4000L, 12));
+//
+    Decision decision = decisionEngine.calculateApprovedLoan(debtorPersonalCode,4000L,12);
+    assertEquals(false,decision.getLoanApproval());
+    assertEquals(0,decision.getLoanAmount());
     }
 
     @Test
     void testSegment1PersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException {
-        Decision decision = decisionEngine.calculateApprovedLoan(segment1PersonalCode, 4000L, 12);
-        assertEquals(2000, decision.getLoanAmount());
-        assertEquals(20, decision.getLoanPeriod());
+        Decision decision = decisionEngine.calculateApprovedLoan(segment1PersonalCode, 2000L, 24);
+        assertEquals(2400, decision.getLoanAmount());
+        assertEquals(24, decision.getLoanPeriod());
     }
 
     @Test
     void testSegment2PersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException {
-        Decision decision = decisionEngine.calculateApprovedLoan(segment2PersonalCode, 4000L, 12);
-        assertEquals(3600, decision.getLoanAmount());
-        assertEquals(12, decision.getLoanPeriod());
+        Decision decision = decisionEngine.calculateApprovedLoan(segment2PersonalCode, 3000L, 36);
+        assertEquals(10000, decision.getLoanAmount());
+        assertEquals(36, decision.getLoanPeriod());
     }
 
     @Test
@@ -103,10 +109,25 @@ class DecisionEngineTest {
     }
 
     @Test
-    void testNoValidLoanFound() {
-        assertThrows(NoValidLoanException.class,
-                () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 10000L, 60));
+    void testHighCreditScore() throws InvalidLoanPeriodException, NoValidLoanException,
+            InvalidPersonalCodeException, InvalidLoanAmountException{
+        Decision decision = decisionEngine.calculateApprovedLoan(segment2PersonalCode,3000L,24);
+        assertEquals(true,decision.getLoanApproval());
     }
+
+    @Test
+    void testLowCreditScore() throws InvalidLoanPeriodException,NoValidLoanException,
+            InvalidPersonalCodeException,InvalidLoanAmountException{
+        Decision decision = decisionEngine.calculateApprovedLoan(segment1PersonalCode,8000L,12);
+        assertEquals(false,decision.getLoanApproval());
+        assertEquals("Credit Score is too low",decision.getErrorMessage());
+    }
+
+//    @Test
+//    void testNoValidLoanFound() {
+//        assertThrows(NoValidLoanException.class,
+//                () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 10000L, 60));
+//    }
 
 }
 

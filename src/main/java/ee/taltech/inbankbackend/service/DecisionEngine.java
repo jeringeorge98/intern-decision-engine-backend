@@ -41,27 +41,35 @@ public class DecisionEngine {
         try {
             verifyInputs(personalCode, loanAmount, loanPeriod);
         } catch (Exception e) {
-            return new Decision(null, null, e.getMessage());
+            return new Decision(false,null, null, e.getMessage());
         }
 
         int outputLoanAmount;
         creditModifier = getCreditModifier(personalCode);
 
         if (creditModifier == 0) {
-            throw new NoValidLoanException("No valid loan found!");
-        }
+            // user has debt return 200 with loan rejected
+            return new Decision(false,0,0,"User has debt");
+//            throw new NoValidLoanException("No valid loan found!");
+        }else{
+            float creditScore = calculateCreditScore(creditModifier,loanAmount,loanPeriod);
+            if(creditScore <0.1){
+                return new Decision(false,null,null,"Credit Score is too low");
+            }else{
+                while (highestValidLoanAmount(loanPeriod) < DecisionEngineConstants.MINIMUM_LOAN_AMOUNT) {
+                    loanPeriod++;
+                }
 
-        while (highestValidLoanAmount(loanPeriod) < DecisionEngineConstants.MINIMUM_LOAN_AMOUNT) {
-            loanPeriod++;
-        }
+                if (loanPeriod <= DecisionEngineConstants.MAXIMUM_LOAN_PERIOD) {
+                    outputLoanAmount = Math.min(DecisionEngineConstants.MAXIMUM_LOAN_AMOUNT, highestValidLoanAmount(loanPeriod));
+                } else {
+                    // return 404 with no valid loan found
+                    throw new NoValidLoanException("No valid loan found!");
+                }
 
-        if (loanPeriod <= DecisionEngineConstants.MAXIMUM_LOAN_PERIOD) {
-            outputLoanAmount = Math.min(DecisionEngineConstants.MAXIMUM_LOAN_AMOUNT, highestValidLoanAmount(loanPeriod));
-        } else {
-            throw new NoValidLoanException("No valid loan found!");
+                return new Decision(true,outputLoanAmount, loanPeriod, null);
+            }
         }
-
-        return new Decision(outputLoanAmount, loanPeriod, null);
     }
 
     /**
@@ -124,4 +132,10 @@ public class DecisionEngine {
         }
 
     }
+
+    private float calculateCreditScore(int creditModifier,long loanAmount,int loanPeriod){
+        return ((float) creditModifier / loanAmount * loanPeriod) /10;
+    }
+
+
 }

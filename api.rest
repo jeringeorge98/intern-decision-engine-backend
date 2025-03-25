@@ -1,0 +1,27 @@
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "50307172740",
+  "loanAmount": "2000",
+  "loanPeriod": "20"
+}
+### SEGMENT 1 with high loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "50307172740",
+  "loanAmount": "8000",
+  "loanPeriod": "12"
+}
+
+### SEGMENT 2 with acceptable loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+"personalCode": "38411266610",
+"loanAmount": "3000",
+"loanPeriod": "24"
+}

@@ -1,5 +1,6 @@
 package ee.taltech.inbankbackend.endpoint;
 
+import ee.taltech.inbankbackend.config.LoanStatus;
 import ee.taltech.inbankbackend.exceptions.InvalidLoanAmountException;
 import ee.taltech.inbankbackend.exceptions.InvalidLoanPeriodException;
 import ee.taltech.inbankbackend.exceptions.InvalidPersonalCodeException;
@@ -47,6 +48,8 @@ public class DecisionEngineController {
         try {
             Decision decision = decisionEngine.
                     calculateApprovedLoan(request.getPersonalCode(), request.getLoanAmount(), request.getLoanPeriod());
+
+            response.setLoanApproval(decision.getLoanApproval() ? LoanStatus.APPROVED.toString() : LoanStatus.REJECTED.toString());
             response.setLoanAmount(decision.getLoanAmount());
             response.setLoanPeriod(decision.getLoanPeriod());
             response.setErrorMessage(decision.getErrorMessage());
