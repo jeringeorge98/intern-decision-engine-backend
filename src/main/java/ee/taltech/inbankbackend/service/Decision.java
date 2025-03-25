@@ -12,5 +12,6 @@ public class Decision {
     private Boolean loanApproval;
     private final Integer loanAmount;
     private final Integer loanPeriod;
+    private final Integer age;
     private final String errorMessage;
 }

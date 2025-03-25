@@ -97,6 +97,13 @@ The service consists of two main classes:
 - The creditModifier class right now has the business rules hardcoded ,any modification in the segment logic would require to modify the code which would violate the second principle of S.O.L.I.D. A recommendation would be that we could implement the creditModifier class as an interface which would be implemented thus not having to change the core logic in the decisionEngine everytime. 
 - It would be also nice to have a REST file which would make it easier to test the apis in real time .   
 # Biggest shortcoming/bug :
-- There were two biggest shortcomings in the implementation that i have discovered and proposed a fix:
+- There were two biggest shortcomings in the implementation that I have discovered and proposed a fix:
 - Credit Score Implementation - The requirement clearly stated that a credit score evaluation algorithmn had to be implemented based on the inputs and any score < 0.1 would not qualify for a loan .This requirement was not fulfilled and thus i have added this fix in my iteration.
 - Response Format - The requirement stated that the response needs to have a positive or negative message based on the descision engine and then the amount which was not fully implemented .We were handling the 400,404,500 cases of the requests but the Ok response also has to have a field that tells about the status of the loan and the amount which was then added in my iteration.
+
+# Task 2
+ - To Implement Ticket 102 an age field was added to teh Decision Request and to the Decision Entity
+ - The InvalidAge Exception class was created to handle the invalid age error
+ - The logic for handling the age range is written in decision engine class
+ - The error message is then sent to the client. 
+ - Minimum age was assumed to be 18 and maximum age was assumed to be 70. 

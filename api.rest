@@ -25,3 +25,14 @@ Content-Type: application/json
 "loanAmount": "3000",
 "loanPeriod": "24"
 }
+
+### WIth invalid age
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+"personalCode": "38411266610",
+"loanAmount": "3000",
+"loanPeriod": "24",
+  "age": 69
+}
