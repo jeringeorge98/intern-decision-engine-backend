@@ -93,14 +93,15 @@ The service consists of two main classes:
 # Improvements
 - After assessing the code in line with the S.O.L.I.D principles there are a few improvements that I would recommend
 - DecisionEngine class right now handles multiple responsibilities .One recommendation would be move the validation logic and the credit calculation logic to seperate classes and have teh decision engine only calculate the loan amount and the decision to provide the loan,this would be in line with the first principle of S.O.L.I.D -Single Responsibility principle.
-- Using dependency Injection more often would be another recommendation ,The EstonianPersonalCodeValidator class is directly instantiated in the decisionEngine instead of maybe using dependency Injection this is in violation of teh last principle of SOLID ,thus we could remove that and have it instantiated in the constructor.
+- Using dependency Injection more often would be another recommendation ,The EstonianPersonalCodeValidator class is directly instantiated in the decisionEngine instead of maybe using dependency Injection this is in violation of teh last principle of SOLID ,thus we could remove that and have it instantiated in the constructor.Currently it is used only once so it could be accpetable but once the vaildator class is used more often having it as a Component would make sense.
 - The creditModifier class right now has the business rules hardcoded ,any modification in the segment logic would require to modify the code which would violate the second principle of S.O.L.I.D. A recommendation would be that we could implement the creditModifier class as an interface which would be implemented thus not having to change the core logic in the decisionEngine everytime. 
 - It would be also nice to have a REST file which would make it easier to test the apis in real time .   
 # Biggest shortcoming/bug :
-- There were two biggest shortcomings in the implementation that I have discovered and proposed a fix:
+- There were couple of  shortcomings/bugs in the implementation that I have discovered and proposed a fix:
 - Credit Score Implementation - The requirement clearly stated that a credit score evaluation algorithmn had to be implemented based on the inputs and any score < 0.1 would not qualify for a loan .This requirement was not fulfilled and thus i have added this fix in my iteration.
 - Response Format - The requirement stated that the response needs to have a positive or negative message based on the descision engine and then the amount which was not fully implemented .We were handling the 400,404,500 cases of the requests but the Ok response also has to have a field that tells about the status of the loan and the amount which was then added in my iteration.
-
+- MAXIMUM LOAN PERIOD -The maximum loan period suggested in the requirements is 48 but in the code the contant was fixed to 60 which is a major bug .
+- Credit Modifier logic -The requirement has provided example that do not match with the implementation of the credit modifier logic that was implemented , the credit modifier considers last 4 digits to group a personal code in to one of the four segments but these do not match with the logic of the example in the requirement pdf
 # Task 2
  - To Implement Ticket 102 an age field was added to teh Decision Request and to the Decision Entity
  - The InvalidAge Exception class was created to handle the invalid age error

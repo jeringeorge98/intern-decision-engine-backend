@@ -47,7 +47,6 @@ public class DecisionEngine {
 
         int outputLoanAmount;
         creditModifier = getCreditModifier(personalCode);
-
         if (creditModifier == 0) {
             // user has debt return 200 with loan rejected
             return new Decision(false,0,0,age,"User has debt");
@@ -133,14 +132,14 @@ public class DecisionEngine {
             throw new InvalidLoanPeriodException("Invalid loan period!");
         }
 
-        if (!((DecisionEngineConstants.MIN_AGE_CUSTOMER <= age) && ((DecisionEngineConstants.MAX_AGE_CUSTOMER * 12) > ((age * 12)+DecisionEngineConstants.MAXIMUM_LOAN_PERIOD)))){
-            throw  new InvalidAgeException("Age"+age +"is not within the acceptable range!");
+        if (!((DecisionEngineConstants.MIN_AGE_CUSTOMER <= age) && ((DecisionEngineConstants.MAX_AGE_CUSTOMER * 12) >= ((age * 12)+DecisionEngineConstants.MAXIMUM_LOAN_PERIOD)))){
+            throw  new InvalidAgeException("Age" +age+ "is not within the acceptable range!");
         }
 
     }
 
     private float calculateCreditScore(int creditModifier,long loanAmount,int loanPeriod){
-        return ((float) creditModifier / loanAmount * loanPeriod) /10;
+        return (((float) creditModifier / loanAmount) * loanPeriod) /10;
     }
 
 
