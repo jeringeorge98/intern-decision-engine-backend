@@ -10,17 +10,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests for the DecisionEngine service.
+ * These tests verify the loan approval calculation logic for different
+ * customer segments, input validation, and edge cases.
+ */
 @ExtendWith(MockitoExtension.class)
 class DecisionEngineTest {
 
     @InjectMocks
     private DecisionEngine decisionEngine;
 
-    private String debtorPersonalCode;
-    private String segment1PersonalCode;
-    private String segment2PersonalCode;
-    private String segment3PersonalCode;
-    private String noValidPersonalCode;
+    // Test personal codes for different customer segments
+    private String debtorPersonalCode;    // Customer with debt (credit modifier 0)
+    private String segment1PersonalCode;  // Customer in segment 1 (credit modifier 100)
+    private String segment2PersonalCode;  // Customer in segment 2 (credit modifier 300)
+    private String segment3PersonalCode;  // Customer in segment 3 (credit modifier 1000)
+    private String noValidPersonalCode;   // Invalid personal code
 
     @BeforeEach
     void setUp() {
@@ -32,14 +38,22 @@ class DecisionEngineTest {
 
     }
 
+    /**
+     * Tests that a customer with a debtor personal code (credit modifier 0)
+     * is rejected for a loan with appropriate values returned.
+     */
     @Test
     void testDebtorPersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException , InvalidAgeException {
-    Decision decision = decisionEngine.calculateApprovedLoan(debtorPersonalCode,4000L,12,20);
-    assertEquals(false,decision.getLoanApproval());
-    assertEquals(0,decision.getLoanAmount());
+        Decision decision = decisionEngine.calculateApprovedLoan(debtorPersonalCode,4000L,12,20);
+        assertEquals(false,decision.getLoanApproval());
+        assertEquals(0,decision.getLoanAmount());
     }
 
+    /**
+     * Tests that a customer with a segment 1 personal code (credit modifier 100)
+     * gets appropriate loan amount and period approved.
+     */
     @Test
     void testSegment1PersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException,InvalidAgeException {
@@ -48,6 +62,10 @@ class DecisionEngineTest {
         assertEquals(24, decision.getLoanPeriod());
     }
 
+    /**
+     * Tests that a customer with a segment 2 personal code (credit modifier 300)
+     * gets appropriate loan amount and period approved, capped at maximum loan amount.
+     */
     @Test
     void testSegment2PersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException,InvalidAgeException {
@@ -56,6 +74,10 @@ class DecisionEngineTest {
         assertEquals(36, decision.getLoanPeriod());
     }
 
+    /**
+     * Tests that a customer with a segment 3 personal code (credit modifier 1000)
+     * gets appropriate loan amount and period approved, capped at maximum loan amount.
+     */
     @Test
     void testSegment3PersonalCode() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException,InvalidAgeException {
@@ -64,12 +86,20 @@ class DecisionEngineTest {
         assertEquals(12, decision.getLoanPeriod());
     }
 
+    /**
+     * Tests that an invalid personal code throws InvalidPersonalCodeException.
+     * Verifies the validation of Estonian personal ID codes.
+     */
     @Test
     void testInvalidPersonalCode() {
         assertThrows(InvalidPersonalCodeException.class,
                 () -> decisionEngine.calculateApprovedLoan(noValidPersonalCode, 4000L, 12,20));
     }
 
+    /**
+     * Tests that loan amounts below minimum and above maximum throw InvalidLoanAmountException.
+     * Verifies the boundary validation for loan amounts.
+     */
     @Test
     void testInvalidLoanAmount() {
         Long tooLowLoanAmount = DecisionEngineConstants.MINIMUM_LOAN_AMOUNT - 1L;
@@ -82,6 +112,10 @@ class DecisionEngineTest {
                 () -> decisionEngine.calculateApprovedLoan(segment1PersonalCode, tooHighLoanAmount, 12,20));
     }
 
+    /**
+     * Tests that loan periods below minimum and above maximum throw InvalidLoanPeriodException.
+     * Verifies the boundary validation for loan periods.
+     */
     @Test
     void testInvalidLoanPeriod() {
         int tooShortLoanPeriod = DecisionEngineConstants.MINIMUM_LOAN_PERIOD - 1;
@@ -94,6 +128,12 @@ class DecisionEngineTest {
                 () -> decisionEngine.calculateApprovedLoan(segment1PersonalCode, 4000L, tooLongLoanPeriod,20));
     }
 
+    /**
+     * Tests that the system can calculate a suitable loan amount
+     * based on the credit modifier and requested period. 
+     * This test validates that a segment 2 customer can get an appropriate loan amount
+     * without having to increase the period.
+     */
     @Test
     void testFindSuitableLoanPeriod() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException,InvalidAgeException {
@@ -102,6 +142,11 @@ class DecisionEngineTest {
         assertEquals(12, decision.getLoanPeriod());
     }
 
+    /**
+     * Tests that a customer with high credit score gets loan approval.
+     * This test verifies that a segment 2 customer with suitable loan parameters
+     * receives approval for their loan request.
+     */
     @Test
     void testHighCreditScore() throws InvalidLoanPeriodException, NoValidLoanException,
             InvalidPersonalCodeException, InvalidLoanAmountException,InvalidAgeException{
@@ -111,6 +156,10 @@ class DecisionEngineTest {
 
 
 
+    /**
+     * Tests age validation by verifying that ages outside allowed range
+     * throw InvalidAgeException. Tests both lower and upper boundaries.
+     */
     @Test
     void testWhenAgeIsLower(){
         int tooLowAge = DecisionEngineConstants.MIN_AGE_CUSTOMER - 1;
@@ -123,6 +172,11 @@ class DecisionEngineTest {
                 () -> decisionEngine.calculateApprovedLoan(segment2PersonalCode, 3000L, 12,tooHighAge));
     }
 
+    /**
+     * Tests that NoValidLoanException is thrown when no valid loan can be found.
+     * This happens when credit score requirements can't be met even with period extension.
+     * This test case uses a segment 1 customer with high loan amount and maximum period.
+     */
     @Test
     void testNoValidLoanFound() {
         assertThrows(NoValidLoanException.class,

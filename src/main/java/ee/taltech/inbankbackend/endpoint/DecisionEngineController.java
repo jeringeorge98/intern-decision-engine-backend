@@ -31,10 +31,10 @@ public class DecisionEngineController {
      * A REST endpoint that handles requests for loan decisions.
      * The endpoint accepts POST requests with a request body containing the customer's personal ID code,
      * requested loan amount, and loan period.<br><br>
-     * - If the loan amount or period is invalid, the endpoint returns a bad request response with an error message.<br>
-     * - If the personal ID code is invalid, the endpoint returns a bad request response with an error message.<br>
-     * - If an unexpected error occurs, the endpoint returns an internal server error response with an error message.<br>
-     * - If no valid loans can be found, the endpoint returns a not found response with an error message.<br>
+     * - If the loan amount or period is invalid, the endpoint returns a bad request response with an error message.
+     * - If the personal ID code is invalid, the endpoint returns a bad request response with an error message.
+     * - If an unexpected error occurs, the endpoint returns an internal server error response with an error message.
+     * - If no valid loans can be found, the endpoint returns a not found response with an error message.
      * - If a valid loan is found, a DecisionResponse is returned containing the approved loan amount and period.
      *
      * @param request The request body containing the customer's personal ID code, requested loan amount, and loan period
@@ -43,8 +43,11 @@ public class DecisionEngineController {
     @PostMapping("/decision")
     public ResponseEntity<DecisionResponse> requestDecision(@RequestBody DecisionRequest request) {
         try {
-            Decision decision = decisionEngine.
-                    calculateApprovedLoan(request.getPersonalCode(), request.getLoanAmount(), request.getLoanPeriod(),request.getAge());
+            Decision decision = decisionEngine.calculateApprovedLoan(
+                    request.getPersonalCode(), 
+                    request.getLoanAmount(), 
+                    request.getLoanPeriod(),
+                    request.getAge());
 
             response.setLoanApproval(decision.getLoanApproval() ? LoanStatus.APPROVED.toString() : LoanStatus.REJECTED.toString());
             response.setLoanAmount(decision.getLoanAmount());
@@ -54,25 +57,26 @@ public class DecisionEngineController {
             return ResponseEntity.ok(response);
         } catch (InvalidPersonalCodeException | InvalidLoanAmountException | InvalidLoanPeriodException |
                  InvalidAgeException e) {
-            response.setLoanApproval(null);
-            response.setLoanAmount(null);
-            response.setLoanPeriod(null);
-            response.setErrorMessage(e.getMessage());
-
+            ResponseWithError(e.getMessage());
             return ResponseEntity.badRequest().body(response);
         } catch (NoValidLoanException e) {
-            response.setLoanApproval(null);
-            response.setLoanAmount(null);
-            response.setLoanPeriod(null);
-            response.setErrorMessage(e.getMessage());
-
+            ResponseWithError(e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
-            response.setLoanAmount(null);
-            response.setLoanPeriod(null);
-            response.setErrorMessage("An unexpected error occurred");
-
+            ResponseWithError("An unexpected error occurred");
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+    
+    /**
+     * Resets the response object with error information
+     * 
+     * @param errorMessage The error message to set
+     */
+    private void ResponseWithError(String errorMessage) {
+        response.setLoanApproval(null);
+        response.setLoanAmount(null);
+        response.setLoanPeriod(null);
+        response.setErrorMessage(errorMessage);
     }
 }
