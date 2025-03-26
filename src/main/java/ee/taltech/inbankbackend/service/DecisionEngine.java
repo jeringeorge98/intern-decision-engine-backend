@@ -133,7 +133,7 @@ public class DecisionEngine {
         }
 
         if (!((DecisionEngineConstants.MIN_AGE_CUSTOMER <= age) && ((DecisionEngineConstants.MAX_AGE_CUSTOMER * 12) >= ((age * 12)+DecisionEngineConstants.MAXIMUM_LOAN_PERIOD)))){
-            throw  new InvalidAgeException("Age" +age+ "is not within the acceptable range!");
+            throw  new InvalidAgeException("Age " +age+ " is not within the acceptable range!");
         }
 
     }
