@@ -60,10 +60,21 @@ public class DecisionEngineControllerTest {
         segment2PersonalCode = "38411266610";
         segment3PersonalCode = "35006069515";
         noValidPersonalCode = "37605031399";
+        objectMapper = new ObjectMapper();
     }
 
     /**
      * This method tests the /loan/decision endpoint with valid inputs.
+     */
+
+    /**
+     * This test tests the happy path
+     * @throws Exception
+     * @throws InvalidLoanPeriodException
+     * @throws NoValidLoanException
+     * @throws InvalidPersonalCodeException
+     * @throws InvalidLoanAmountException
+     * @throws InvalidAgeException
      */
     @Test
     public void givenValidRequest_whenRequestDecision_thenReturnsExpectedResponse()
@@ -90,6 +101,37 @@ public class DecisionEngineControllerTest {
         assert response.getLoanPeriod() == 12;
         assert response.getErrorMessage() == null;
     }
+
+    /**
+     * This test tests the negative path of the OK response
+     * @throws Exception
+     * @throws InvalidLoanPeriodException
+     * @throws NoValidLoanException
+     * @throws InvalidPersonalCodeException
+     * @throws InvalidLoanAmountException
+     * @throws InvalidAgeException
+     */
+    @Test
+    public void givenDebtorRequest_whenRequestDecision_thenReturnsExpectedResponse()
+            throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
+            InvalidLoanAmountException,InvalidAgeException {
+        Decision decision = new Decision(false,null, null, 24,null);
+        when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt(),anyInt())).thenReturn(decision);
+
+        DecisionRequest request = new DecisionRequest(debtorPersonalCode, 10L, 10,24);
+
+        MvcResult result = mockMvc.perform(post("/loan/decision")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert Objects.equals(response.getLoanApproval(), LoanStatus.REJECTED.toString());
+        assert response.getLoanPeriod() == null;
+    }
+
 
     @Test
     public void givenValidRequest_whenCreditScoreIsLow_thenReturnsExpectedResponse()
@@ -276,7 +318,7 @@ public class DecisionEngineControllerTest {
         when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt(),anyInt()))
                 .thenThrow(new NoValidLoanException("No valid loan available"));
 
-        DecisionRequest request = new DecisionRequest("1234", 1000L, 12,20);
+        DecisionRequest request = new DecisionRequest(segment1PersonalCode, 6000L, 48,20);
 
         MvcResult result = mockMvc.perform(post("/loan/decision")
                         .content(objectMapper.writeValueAsString(request))
@@ -298,7 +340,7 @@ public class DecisionEngineControllerTest {
      * This test ensures that if an invalid age is entered then a 404 bad request is returned to the user with the appropriate message
      */
     @Test
-    public void givenInValidAge_whenRequestDecision_thenReturnsInternalServerError()
+    public void givenInValidAge_whenRequestDecision_thenReturnsBadRequestError()
             throws Exception, InvalidLoanPeriodException, InvalidAgeException, InvalidLoanAmountException, NoValidLoanException, InvalidPersonalCodeException {
         int invalidAge = DecisionEngineConstants.MAX_AGE_CUSTOMER +1;
         when(decisionEngine.calculateApprovedLoan(anyString(),anyLong(),anyInt(),anyInt())).thenThrow(new InvalidAgeException("Not in the Valid Age Range"));

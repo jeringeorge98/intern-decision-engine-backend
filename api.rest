@@ -1,40 +1,189 @@
+### SEGMENT 1 Customer with standard loan
 POST http://localhost:8080/loan/decision
 Content-Type: application/json
 
 {
-  "personalCode": "50307172740",
-  "loanAmount": "2000",
-  "loanPeriod": "20",
-  "age": 20
-}
-### SEGMENT 1 with high loan amount
-POST http://localhost:8080/loan/decision
-Content-Type: application/json
-
-{
-  "personalCode": "50307172740",
+  "personalCode": "49002010976",
   "loanAmount": "5000",
   "loanPeriod": "24",
   "age": 30
 }
 
-### SEGMENT 2 with acceptable loan amount
+### NO Valid Loan Segment
 POST http://localhost:8080/loan/decision
 Content-Type: application/json
 
 {
-"personalCode": "38411266610",
-"loanAmount": "3000",
-"loanPeriod": "24"
+"personalCode": "49002010976",
+"loanAmount": "6000",
+"loanPeriod": "48",
+"age": 30
 }
 
-### WIth invalid age
+
+
+### SEGMENT 2 Customer with standard loan
 POST http://localhost:8080/loan/decision
 Content-Type: application/json
 
 {
-"personalCode": "38411266610",
-"loanAmount": "3000",
-"loanPeriod": "24",
-  "age": 69
+  "personalCode": "49002010987",
+  "loanAmount": "5000",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### SEGMENT 3 Customer with standard loan
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Customer with debt
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010965",
+  "loanAmount": "5000",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Minimum loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "2000",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Maximum loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "10000",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Below minimum loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "1999",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Above maximum loan amount
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "10001",
+  "loanPeriod": "24",
+  "age": 30
+}
+
+### Minimum loan period
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "12",
+  "age": 30
+}
+
+### Maximum loan period
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "48",
+  "age": 30
+}
+
+### Below minimum loan period
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "11",
+  "age": 30
+}
+
+### Above maximum loan period
+
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "49",
+  "age": 30
+}
+
+### Minimum valid age
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "24",
+  "age": 18
+}
+
+### Age at upper boundary with loan period
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "48",
+  "age": 66
+}
+
+### Invalid age (too old to complete loan)
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "49002010998",
+  "loanAmount": "5000",
+  "loanPeriod": "48",
+  "age": 67
+}
+
+### Invalid personal code
+POST http://localhost:8080/loan/decision
+Content-Type: application/json
+
+{
+  "personalCode": "12345",
+  "loanAmount": "5000",
+  "loanPeriod": "24",
+  "age": 30
 }

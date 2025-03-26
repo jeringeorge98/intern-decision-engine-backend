@@ -24,10 +24,10 @@ class DecisionEngineTest {
 
     @BeforeEach
     void setUp() {
-        debtorPersonalCode = "37605030299";
-        segment1PersonalCode = "50307172740";
-        segment2PersonalCode = "38411266610";
-        segment3PersonalCode = "35006069515";
+        debtorPersonalCode = "49002010965";
+        segment1PersonalCode = "49002010976";
+        segment2PersonalCode = "49002010987";
+        segment3PersonalCode = "49002010998";
         noValidPersonalCode = "37605031399";
 
     }
@@ -66,9 +66,8 @@ class DecisionEngineTest {
 
     @Test
     void testInvalidPersonalCode() {
-        String invalidPersonalCode = "12345678901";
         assertThrows(InvalidPersonalCodeException.class,
-                () -> decisionEngine.calculateApprovedLoan(invalidPersonalCode, 4000L, 12,20));
+                () -> decisionEngine.calculateApprovedLoan(noValidPersonalCode, 4000L, 12,20));
     }
 
     @Test
@@ -110,13 +109,7 @@ class DecisionEngineTest {
         assertEquals(true,decision.getLoanApproval());
     }
 
-    @Test
-    void testLowCreditScore() throws InvalidLoanPeriodException,NoValidLoanException,
-            InvalidPersonalCodeException,InvalidLoanAmountException,InvalidAgeException{
-        Decision decision = decisionEngine.calculateApprovedLoan(segment1PersonalCode,8000L,12,20);
-        assertEquals(false,decision.getLoanApproval());
-        assertEquals("Credit Score is too low",decision.getErrorMessage());
-    }
+
 
     @Test
     void testWhenAgeIsLower(){
@@ -130,12 +123,14 @@ class DecisionEngineTest {
                 () -> decisionEngine.calculateApprovedLoan(segment2PersonalCode, 3000L, 12,tooHighAge));
     }
 
+    @Test
+    void testNoValidLoanFound() {
+        assertThrows(NoValidLoanException.class,
+                () -> decisionEngine.calculateApprovedLoan(segment1PersonalCode,6000L,48,20));
     }
 
-//    @Test
-//    void testNoValidLoanFound() {
-//        assertThrows(NoValidLoanException.class,
-//                () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 10000L, 60));
-//    }
+    }
+
+
 
 

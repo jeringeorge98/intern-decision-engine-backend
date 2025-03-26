@@ -61,6 +61,7 @@ public class DecisionEngineController {
 
             return ResponseEntity.badRequest().body(response);
         } catch (NoValidLoanException e) {
+            response.setLoanApproval(null);
             response.setLoanAmount(null);
             response.setLoanPeriod(null);
             response.setErrorMessage(e.getMessage());

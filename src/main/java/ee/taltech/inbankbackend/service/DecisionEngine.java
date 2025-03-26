@@ -44,32 +44,33 @@ public class DecisionEngine {
         } catch (Exception e) {
             return new Decision(false,null, null,age, e.getMessage());
         }
-
-        int outputLoanAmount;
         creditModifier = getCreditModifier(personalCode);
         if (creditModifier == 0) {
             // user has debt return 200 with loan rejected
             return new Decision(false,0,0,age,"User has debt");
-//            throw new NoValidLoanException("No valid loan found!");
-        }else{
-            float creditScore = calculateCreditScore(creditModifier,loanAmount,loanPeriod);
-            if(creditScore <0.1){
-                return new Decision(false,null,null,age,"Credit Score is too low");
-            }else{
-                while (highestValidLoanAmount(loanPeriod) < DecisionEngineConstants.MINIMUM_LOAN_AMOUNT) {
-                    loanPeriod++;
-                }
-
-                if (loanPeriod <= DecisionEngineConstants.MAXIMUM_LOAN_PERIOD) {
-                    outputLoanAmount = Math.min(DecisionEngineConstants.MAXIMUM_LOAN_AMOUNT, highestValidLoanAmount(loanPeriod));
-                } else {
-                    // return 404 with no valid loan found
-                    throw new NoValidLoanException("No valid loan found!");
-                }
-
-                return new Decision(true,outputLoanAmount, loanPeriod,age, null);
-            }
+        } else if (creditModifier == -1) {
+            throw new InvalidPersonalCodeException("Personal Code is not supported");
         }
+
+            float creditScore = calculateCreditScore(creditModifier, loanAmount, loanPeriod);
+            int maxAmount;
+            maxAmount = Math.min(DecisionEngineConstants.MAXIMUM_LOAN_AMOUNT,highestValidLoanAmount(loanPeriod));
+
+        // For credit score >= 0.1, we can directly return the max amount
+        if (creditScore >= 0.1 && maxAmount >= DecisionEngineConstants.MINIMUM_LOAN_AMOUNT) {
+            return new Decision(true, maxAmount, loanPeriod, age, null);
+        }
+
+        // For credit score < 0.1 or if max amount is below minimum,
+        // try to find a valid loan by increasing period
+
+            for (int newPeriod = loanPeriod + 1; newPeriod <= DecisionEngineConstants.MAXIMUM_LOAN_PERIOD; newPeriod++) {
+                int newAmount = Math.min(DecisionEngineConstants.MAXIMUM_LOAN_AMOUNT, highestValidLoanAmount(newPeriod));
+                if (newAmount >= DecisionEngineConstants.MINIMUM_LOAN_AMOUNT) {
+                    return new Decision(true, newAmount, newPeriod, age, null);
+                }
+            }
+     throw new NoValidLoanException("No Valid Loan found !");
     }
 
     /**
@@ -83,26 +84,18 @@ public class DecisionEngine {
 
     /**
      * Calculates the credit modifier of the customer to according to the last four digits of their ID code.
-     * Debt - 0000...2499
-     * Segment 1 - 2500...4999
-     * Segment 2 - 5000...7499
-     * Segment 3 - 7500...9999
-     *
+     * We are considering only the four examples as given in the requirements text
      * @param personalCode ID code of the customer that made the request.
      * @return Segment to which the customer belongs.
      */
-    private int getCreditModifier(String personalCode) {
-        int segment = Integer.parseInt(personalCode.substring(personalCode.length() - 4));
-
-        if (segment < 2500) {
-            return 0;
-        } else if (segment < 5000) {
-            return DecisionEngineConstants.SEGMENT_1_CREDIT_MODIFIER;
-        } else if (segment < 7500) {
-            return DecisionEngineConstants.SEGMENT_2_CREDIT_MODIFIER;
-        }
-
-        return DecisionEngineConstants.SEGMENT_3_CREDIT_MODIFIER;
+    private int getCreditModifier(String personalCode){
+        return switch (personalCode) {
+            case "49002010965" -> 0;
+            case "49002010976" -> DecisionEngineConstants.SEGMENT_1_CREDIT_MODIFIER;
+            case "49002010987" -> DecisionEngineConstants.SEGMENT_2_CREDIT_MODIFIER;
+            case "49002010998" -> DecisionEngineConstants.SEGMENT_3_CREDIT_MODIFIER;
+            default -> -1;
+        };
     }
 
     /**
