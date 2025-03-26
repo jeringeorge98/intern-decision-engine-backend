@@ -49,17 +49,14 @@ public class DecisionEngineControllerTest {
     private String segment1PersonalCode;
     private String segment2PersonalCode;
     private String segment3PersonalCode;
-    private String noValidPersonalCode;
+
 
     @BeforeEach
     public void setup() {
-
-        objectMapper = new ObjectMapper();
         debtorPersonalCode = "37605030299";
         segment1PersonalCode = "50307172740";
         segment2PersonalCode = "38411266610";
         segment3PersonalCode = "35006069515";
-        noValidPersonalCode = "37605031399";
         objectMapper = new ObjectMapper();
     }
 
@@ -345,7 +342,7 @@ public class DecisionEngineControllerTest {
         int invalidAge = DecisionEngineConstants.MAX_AGE_CUSTOMER +1;
         when(decisionEngine.calculateApprovedLoan(anyString(),anyLong(),anyInt(),anyInt())).thenThrow(new InvalidAgeException("Not in the Valid Age Range"));
 
-        DecisionRequest request = new DecisionRequest(segment1PersonalCode, 8000L, 12,invalidAge);
+        DecisionRequest request = new DecisionRequest(segment2PersonalCode, 8000L, 12,invalidAge);
         MvcResult result = mockMvc.perform(post("/loan/decision")
                         .content(objectMapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
