@@ -96,6 +96,7 @@ The service consists of two main classes:
 # Improvements
 - After assessing the code in line with the S.O.L.I.D principles there are a few improvements that I would recommend
 - DecisionEngine class right now handles multiple responsibilities .One recommendation would be move the validation logic and the credit calculation logic to seperate classes and have teh decision engine only calculate the loan amount and the decision to provide the loan,this would be in line with the first principle of S.O.L.I.D -Single Responsibility principle.
+- Credit Modifier logic could have aa seperate class thus being open to modifications which is in line with the second rule of S.O.L.I.D
 - Using dependency Injection more often would be another recommendation ,The EstonianPersonalCodeValidator class is directly instantiated in the decisionEngine instead of maybe using dependency Injection this is in violation of teh last principle of SOLID ,thus we could remove that and have it instantiated in the constructor.Currently it is used only once so it could be accpetable but once the vaildator class is used more often having it as a Component would make sense.
 - It would be also nice to have a REST file which would make it easier to test the apis in real time .   
 # Biggest shortcoming/bug :
